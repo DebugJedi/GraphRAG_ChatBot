@@ -26,11 +26,7 @@ class AnswerCheck():
         """
         prompt = [
             {"role": "system", 
-             "content": f"Given the query and the context:{context}, tell if the context provides a complete answer? Yes or No. If yes, provide the answer."
-            },
-            {
-                "role": "user",
-                "content": f"Here's my query: {query}"
+             "content": f"Given the query {query} and the context:{context}, tell if the context provides a complete answer? Yes or No. If yes, provide the answer."
             }
         ]
         
@@ -83,11 +79,7 @@ class QueryEngine:
 
         prompt = [
             {"role": "system", 
-             "content": f"Given the query and the context: {context}, is the context provides the complete. If yes, provide the answer."
-            },
-            {
-                "role": "user",
-                "content": f"Here's my query: {query}"
+             "content": f"Given the query {query} and the context: {context}, is the context provides the complete. If yes, provide the answer."
             }
         ]
         
@@ -95,11 +87,7 @@ class QueryEngine:
         if "Yes" in response.choices[0].message.content:
             prompt = [
             {"role": "system", 
-             "content": f"Given the query and the context: {context},just Answer the query."
-            },
-            {
-                "role": "user",
-                "content": f"Here's my query: {query}"
+             "content": f"Given the query {query} and the context: {context},just Answer the query."
             }
         ]
             final_response = self.openai_model.completion(prompt=prompt, temperature =0.3)
