@@ -1,5 +1,3 @@
-import openai
-from openai import OpenAI
 from app.document_processor import DocumentProcessor
 from app.knowledgegraph import knowledgeGraph
 from app.visualizer import Visulaizer
@@ -8,7 +6,7 @@ import streamlit as st
 import numpy as np
 
 
-class GraphRAG:
+class GraphRAG(DocumentProcessor):
     def __init__(self):
         """
             Initializes the GraphRAG system with components for document processing, knowledge graph construction,
@@ -24,7 +22,8 @@ class GraphRAG:
         """
         
         self.document_processor = DocumentProcessor()
-        self.knowledge_graph = knowledgeGraph()
+        self.openai = DocumentProcessor().openai_model
+        self.knowledge_graph = knowledgeGraph(openai_model=self.openai)
         self.query_engine = None
         self.visualizer = Visulaizer()
        
@@ -40,9 +39,9 @@ class GraphRAG:
         - None
         """
         splits, vector_store, openai_model, documents = self.document_processor.process_documents(documents) 
-        self.knowledge_graph.build_graph(splits, openai_model)
-        st.write("Initiating Query Engine....")
-        self.query_engine = QueryEngine(vector_store, self.knowledge_graph, openai_model, documents)
+        self.knowledge_graph.build_graph(splits)
+        # st.write("Initiating Query Engine....")
+        self.query_engine = QueryEngine(vector_store, self.knowledge_graph, self.openai, documents)
 
     def query(self, query: str):
         """

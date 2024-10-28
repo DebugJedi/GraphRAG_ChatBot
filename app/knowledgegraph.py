@@ -1,16 +1,11 @@
 import networkx as nx
 import streamlit as st
 from nltk.stem import WordNetLemmatizer
-import spacy
 from sklearn.metrics.pairwise import cosine_similarity
-from spacy.cli import download
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
 from pydantic import BaseModel, Field
 from tqdm import tqdm
 from typing import List, Tuple, Dict
-from transformers import pipeline
-import openai
 import numpy as np
 
 
@@ -18,7 +13,7 @@ class Concepts(BaseModel):
     concepts_list: List[str] = Field(description="List of concepts")
 
 class knowledgeGraph:
-    def __init__(self):
+    def __init__(self, openai_model):
         """
         Initializes the knowledgeGraph with a graph, lemmatizer and an NLP model.
         Attributes:
@@ -28,16 +23,16 @@ class knowledgeGraph:
         - nlp: An instance of a spacy NLP model.
         - edges_threshold: A float value that sets the threshold for adding edges based on similartiy.
         """
-        openai.api_key = st.secrets["API_KEY"]
+        self.OpenAIModel = openai_model
         self.graph = nx.Graph()
         self.lemmatizer = WordNetLemmatizer()
         self.concept_cache = {}
         # self.nlp = self._load_transformers_model()
-        self.ner_pipeline = pipeline("ner", model="dbmdz/bert-large-cased-finetuned-conll03-english")
+        # self.ner_pipeline = pipeline("ner", model="dbmdz/bert-large-cased-finetuned-conll03-english")
         self.edges_threshold = 0.8
     
     
-    def build_graph(self, splits,  openai_model):
+    def build_graph(self, splits):
         """
         Builds the knowledge graph by adding nodes, creating embeddings, extract concepts, and adding edges.
 
@@ -51,7 +46,7 @@ class knowledgeGraph:
         """
         self._add_nodes(splits)
         
-        embeddings = self._create_embeddings(splits, openai_model)
+        embeddings = self._create_embeddings(splits, self.OpenAIModel)
         self._extract_concepts(splits)   
         self._add_edges(embeddings)
 
@@ -84,14 +79,12 @@ class knowledgeGraph:
         """
         embeddings = []
         for split in splits:
-            embedd = openai_model.embed_documents(split.page_content)
+            embedd = self.OpenAIModel.embed_documents(split.page_content)
             embeddings.extend(embedd)
         embeddings = np.array(embeddings, dtype="float32")
         
         if embeddings.ndim ==1:
             embeddings = embeddings.reshape(1,-1)
-        
-        
         return embeddings
     
     def _compute_similarities(self, embeddings):
@@ -109,7 +102,7 @@ class knowledgeGraph:
        
         return similarity_matrix
     
-    def _load_transformers_model(self, content):
+    def named_entities(self, content):
         """
         Loads the spaCy NLP model, downloading it if necessary.
 
@@ -119,7 +112,15 @@ class knowledgeGraph:
         Returns:
         - spacy.Language: An instance of a spaCy NLP model.
         """
-        return self.ner_pipeline(content)
+        prompt = [
+            {"role": "system", 
+             "content": f"Given the content:{content}, Extract Named entities from the content."
+            }
+        ]
+        
+        response = self.OpenAIModel.completion(prompt=prompt)
+        named_entities = response.choices[0].message.content
+        return named_entities
         # try:
         #     return spacy.load("en_core_web_sm")
         # except OSError:
@@ -143,20 +144,17 @@ class knowledgeGraph:
         if content in self.concept_cache:
             return self.concept_cache[content]
         
-        ner_results = self._load_transformers_model(content)
-        named_entities = [
-            entity['word'] for entity in ner_results 
-            if entity['entity'] in ["B-PER", "B-ORG", "B-LOC", "B-MISC"]
-        ]
+        named_entities = [self.named_entities(content)]
+
+        st.write("named_entities: ", named_entities)
         # doc = self.nlp(content)
         # named_entities = [ent.text for ent in doc.ents if ent.label_ in ["PERSON", "ORG", "GPE", "WORK_OF_ART"]]
-        prompt = (
+        prompts = (
             f"Extract key concepts (excluding named entities) from the following text:\n\n"
             f"{content}\n\n"
             f"Key concepts:"
         )
-        response = openai.chat.completions.create(model="gpt-4o-mini", 
-                                                  messages=[{"role": "user", "content": prompt}],
+        response = self.OpenAIModel.completion(prompt=[{"role": "user", "content": prompts}],
                                                   temperature=0.4)
         general_concepts = response.choices[0].message.content.strip().split(', ')
 

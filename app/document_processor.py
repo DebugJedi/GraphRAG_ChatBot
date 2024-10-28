@@ -1,11 +1,9 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from openai import OpenAI
 import openai
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import streamlit as st
 import faiss
-from sklearn.neighbors import NearestNeighbors
 
 class OpenAIEmbedding:
     def __init__(self, api_key):
@@ -78,11 +76,7 @@ class DocumentProcessor:
         dimension = embedding_array.shape[1]
         vector_store = faiss.IndexFlatL2(dimension)
         vector_store.add(embedding_array)
-        
-
-        st.write("Embedding completed....")
-        
-        
+        # st.write("Embedding completed....")
         self.documents = splits
 
         return splits, vector_store, self.openai_model, self.documents

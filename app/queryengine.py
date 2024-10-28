@@ -2,11 +2,7 @@ import numpy as np
 from typing import List, Tuple, Dict
 import heapq
 import streamlit as st
-from transformers import AutoTokenizer, AutoModel
 from typing import List, Tuple, Dict
-import openai
-from openai import OpenAI
-
 
     
 class AnswerCheck():
