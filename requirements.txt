@@ -16,7 +16,5 @@ python-multipart
 fastapi[all]
 transformers
 annoy
-spacy
-en-core-web-sm
-
+spacy==3.8.2  # Use the specific version you need
 #https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.5.0/en_core_web_sm-3.5.0.tar.gz
