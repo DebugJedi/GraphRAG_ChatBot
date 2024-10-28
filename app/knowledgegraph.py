@@ -32,8 +32,8 @@ class knowledgeGraph:
         self.graph = nx.Graph()
         self.lemmatizer = WordNetLemmatizer()
         self.concept_cache = {}
-        self.nlp = self._load_transformers_model()
-        
+        # self.nlp = self._load_transformers_model()
+        self.ner_pipeline = pipeline("ner", model="dbmdz/bert-large-cased-finetuned-conll03-english")
         self.edges_threshold = 0.8
     
     
@@ -73,7 +73,7 @@ class knowledgeGraph:
 
     def _create_embeddings(self,splits, openai_model):
         """
-        Creates embeddings for the document splits using embedding model.
+     f.   Creates embeddings for the document splits using embedding model.
 
         Args:
         - splits (list): A list of document splits.
@@ -109,7 +109,7 @@ class knowledgeGraph:
        
         return similarity_matrix
     
-    def _load_transformers_model(self):
+    def _load_transformers_model(self, content):
         """
         Loads the spaCy NLP model, downloading it if necessary.
 
@@ -119,12 +119,13 @@ class knowledgeGraph:
         Returns:
         - spacy.Language: An instance of a spaCy NLP model.
         """
-        try:
-            return spacy.load("en_core_web_sm")
-        except OSError:
-            print("Downloading spaCy model....")
-            download("en_core_web_sm")
-            return spacy.load("en_core_web_sm")
+        return self.ner_pipeline(content)
+        # try:
+        #     return spacy.load("en_core_web_sm")
+        # except OSError:
+        #     print("Downloading spaCy model....")
+        #     download("en_core_web_sm")
+        #     return spacy.load("en_core_web_sm")
     
   
     
@@ -141,9 +142,14 @@ class knowledgeGraph:
         
         if content in self.concept_cache:
             return self.concept_cache[content]
-           
-        doc = self.nlp(content)
-        named_entities = [ent.text for ent in doc.ents if ent.label_ in ["PERSON", "ORG", "GPE", "WORK_OF_ART"]]
+        
+        ner_results = self._load_transformers_model(content)
+        named_entities = [
+            entity['word'] for entity in ner_results 
+            if entity['entity'] in ["B-PER", "B-ORG", "B-LOC", "B-MISC"]
+        ]
+        # doc = self.nlp(content)
+        # named_entities = [ent.text for ent in doc.ents if ent.label_ in ["PERSON", "ORG", "GPE", "WORK_OF_ART"]]
         prompt = (
             f"Extract key concepts (excluding named entities) from the following text:\n\n"
             f"{content}\n\n"
