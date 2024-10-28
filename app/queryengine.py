@@ -94,7 +94,7 @@ class QueryEngine:
             final_response = final_response.choices[0].message.content.replace("Yes, the context provides a complete answer.", "")
             
             return final_response
-        return response.choices[0].message.content
+        return response.choices[0].message.content.replace("Yes, the context provides a complete answer.", "")
     
     def _expand_context(self, query: str, relevant_docs) -> Tuple[str, List[int], Dict[int, str], str]:
         """
