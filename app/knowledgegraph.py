@@ -15,6 +15,10 @@ try:
 except LookupError:
     print("WordNet not found. Downloading...")
     nltk.download('wordnet')
+try:
+    nltk.data.find('corpora/wordnet')
+except LookupError:
+    nltk.download('wordnet')
 
 class Concepts(BaseModel):
     concepts_list: List[str] = Field(description="List of concepts")
@@ -245,4 +249,5 @@ class knowledgeGraph:
         Args:
         - str: The lemmatized concepts.
         """
+        
         return ' '.join([self.lemmatizer.lemmatize(word) for word in concept.lower().split()])
