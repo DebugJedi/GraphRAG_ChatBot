@@ -7,7 +7,7 @@ from pypdf import PdfReader
 import numpy as np
 app = FastAPI()
 
-# #in memory processed document
+# in memory processed document
 # processed_documents = {}
 
 # @app.post("/upload_pdf/")
