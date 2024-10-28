@@ -8,6 +8,13 @@ from tqdm import tqdm
 from typing import List, Tuple, Dict
 import numpy as np
 
+import nltk
+
+try:
+    from nltk.corpus import wordnet as wn
+except LookupError:
+    print("WordNet not found. Downloading...")
+    nltk.download('wordnet')
 
 class Concepts(BaseModel):
     concepts_list: List[str] = Field(description="List of concepts")
