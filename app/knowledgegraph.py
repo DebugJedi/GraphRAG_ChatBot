@@ -11,7 +11,6 @@ from tqdm import tqdm
 from typing import List, Tuple, Dict
 from transformers import pipeline
 import openai
-import stanza
 import numpy as np
 
 
