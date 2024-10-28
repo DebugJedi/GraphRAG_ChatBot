@@ -9,6 +9,7 @@ typing
 streamlit-chat
 pypdf
 openai
+langchain-community
 faiss-cpu
 transformers
 python-multipart
