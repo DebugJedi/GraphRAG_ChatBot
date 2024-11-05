@@ -2,3 +2,6 @@ secrets.toml
 get-pip.py
 req.txt
 myenv
+test*
+hello.py
+workflow.yaml
